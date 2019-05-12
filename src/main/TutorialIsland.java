@@ -38,25 +38,6 @@ public class TutorialIsland extends Script {
     @Override
     public void onStart() {
 
-        String csvFile = "/home/zoruda/RSPeer/scripts/main/accounts.csv";
-        String line = "";
-        String cvsSplitBy = ",";
-
-
-        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
-
-            while ((line = br.readLine()) != null) {
-
-                // use comma as separator
-                accounts.add(line.split(cvsSplitBy));
-
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
 
     }
 
@@ -453,7 +434,7 @@ public class TutorialIsland extends Script {
                 }
                 return Random.nextInt(1000,1500);
             case 1000:
-                accounts.remove(username);
+                /*accounts.remove(username);
                 Tabs.open(Tab.LOGOUT);
                 Time.sleep(Random.nextInt(500));
                 Interfaces.getComponent(182,8).click();
@@ -463,7 +444,7 @@ public class TutorialIsland extends Script {
                 }
                 if(accounts.get(account)[2].equalsIgnoreCase("false")) {
                     Login.enterCredentials(accounts.get(account)[0], accounts.get(account)[1]);
-                }
+                }*/
 
 
         }
