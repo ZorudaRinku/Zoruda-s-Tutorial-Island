@@ -1,48 +1,28 @@
 package main;
 
-import com.sun.deploy.security.MSCryptoDSASignature;
-import com.sun.org.apache.xpath.internal.axes.WalkerFactory;
-import kotlin.jvm.JvmOverloads;
-import org.rspeer.runetek.adapter.Interactable;
 import org.rspeer.runetek.adapter.component.InterfaceComponent;
-import org.rspeer.runetek.adapter.component.Item;
-import org.rspeer.runetek.adapter.scene.Entity;
-import org.rspeer.runetek.adapter.scene.Pickable;
-import org.rspeer.runetek.adapter.scene.Player;
-import org.rspeer.runetek.adapter.scene.SceneObject;
+import org.rspeer.runetek.adapter.scene.Npc;
 import org.rspeer.runetek.api.Login;
 import org.rspeer.runetek.api.Varps;
 import org.rspeer.runetek.api.commons.Time;
 import org.rspeer.runetek.api.commons.math.Random;
 import org.rspeer.runetek.api.component.Dialog;
-import org.rspeer.runetek.api.component.InterfaceAddress;
-import org.rspeer.runetek.api.component.InterfaceOptions;
 import org.rspeer.runetek.api.component.Interfaces;
 import org.rspeer.runetek.api.component.tab.*;
 import org.rspeer.runetek.api.movement.Movement;
 import org.rspeer.runetek.api.movement.position.Position;
 import org.rspeer.runetek.api.scene.Npcs;
-import org.rspeer.runetek.api.scene.Pickables;
 import org.rspeer.runetek.api.scene.Players;
 import org.rspeer.runetek.api.scene.SceneObjects;
-import org.rspeer.runetek.providers.RSGrandExchangeOffer;
-import org.rspeer.script.Script;
-import org.rspeer.script.ScriptMeta;
-import org.rspeer.script.ScriptCategory;
-
 import org.rspeer.script.Script;
 import org.rspeer.script.ScriptCategory;
 import org.rspeer.script.ScriptMeta;
 import org.rspeer.ui.Log;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.function.BooleanSupplier;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 
 @ScriptMeta(name = "Zoruda's Tutorial Island",  desc = "My tut island script for private use", developer = "Zoruda", category = ScriptCategory.OTHER)
@@ -52,11 +32,31 @@ public class TutorialIsland extends Script {
     public static final int ValueNumber = 281;
     Robot robot;
     String username;
-
+    ArrayList<String[]> accounts = new ArrayList<String[]>();
 
 
     @Override
     public void onStart() {
+
+        String csvFile = "/home/zoruda/RSPeer/scripts/main/accounts.csv";
+        String line = "";
+        String cvsSplitBy = ",";
+
+
+        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
+
+            while ((line = br.readLine()) != null) {
+
+                // use comma as separator
+                accounts.add(line.split(cvsSplitBy));
+
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
 
     }
 
@@ -81,7 +81,7 @@ public class TutorialIsland extends Script {
                     Interfaces.getComponent(558,7).click();
                     return 1000;
                 }
-                if(Interfaces.getComponent(162, 45).getText() == "*") {
+                if(Interfaces.getComponent(162, 45).getText().equals("*")) {
                     try {
                         robot = new Robot();
                     } catch (AWTException e) {
@@ -172,7 +172,7 @@ public class TutorialIsland extends Script {
                     Interfaces.getComponent(269, 99).click();
                 }
             case 2:
-                talkTo("Gielinor Guide", "");
+                talkTo("Gielinor Guide");
                 if(Dialog.isOpen() && !Dialog.canContinue()){
 
                     Dialog.process(Random.nextInt(0, Dialog.getChatOptions().length));
@@ -184,13 +184,13 @@ public class TutorialIsland extends Script {
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.OPTIONS), 400, 5000);
                 }
             case 7:
-                talkTo("Gielinor Guide", "");
+                talkTo("Gielinor Guide");
             case 10:
                 interact("Door", 0, "Open");
                 Time.sleepUntil(() -> Players.getLocal().isMoving(), 1500);
                 Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
             case 20:
-                talkTo("Survival Expert", "");
+                talkTo("Survival Expert");
             case 30:
                 if(!Tabs.isOpen(Tab.INVENTORY)){
                     Tabs.open(Tab.INVENTORY);
@@ -205,7 +205,7 @@ public class TutorialIsland extends Script {
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.SKILLS), 400, 5000);
                 }
             case 60:
-                talkTo("Survival Expert", "");
+                talkTo("Survival Expert");
             case 70:
                 interact("Tree", 0, "Chop down");
                 Time.sleepUntil(() -> Inventory.contains("Logs"), 1000, 10000);
@@ -234,7 +234,7 @@ public class TutorialIsland extends Script {
             case 130:
                 interact("Door", 0, "Open");
             case 140:
-                talkTo("Master Chef", "");
+                talkTo("Master Chef");
             case 150:
                 if(Inventory.getFirst("Pot of flour").interact("Use")) {
                     Time.sleep(200);
@@ -263,14 +263,14 @@ public class TutorialIsland extends Script {
                     interact("Door", 0, "Open");
                 }
             case 220:
-                talkTo("Quest Guide", "");
+                talkTo("Quest Guide");
             case 230:
                 if(!Tabs.isOpen(Tab.QUEST_LIST)) {
                     Tabs.open(Tab.QUEST_LIST);
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.QUEST_LIST), 400, 5000);
                 }
             case 240:
-                talkTo("Quest Guide", "");
+                talkTo("Quest Guide");
             case 250:
                 interact("Ladder", 0, "Climb-down");
             case 260:
@@ -280,7 +280,7 @@ public class TutorialIsland extends Script {
                     Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
                 }
             case 270:
-                talkTo("Mining Instructor", "");
+                talkTo("Mining Instructor");
             case 300:
                 //10080
                 interact("", 10080, "Mine");
@@ -289,7 +289,7 @@ public class TutorialIsland extends Script {
             case 320:
                 SceneObjects.getNearest("Furnace").interact("Use");
             case 330:
-                talkTo("Mining Instructor", "");
+                talkTo("Mining Instructor");
             case 340:
                 interact("Anvil", 0, "Smith");
             case 350:
@@ -303,7 +303,7 @@ public class TutorialIsland extends Script {
                     Movement.walkToRandomized(new Position(3091,9497));
                 }
             case 370:
-                talkTo("Combat Instructor", "");
+                talkTo("Combat Instructor");
             case 390:
                 if(!Tabs.isOpen(Tab.EQUIPMENT)) {
                     Tabs.open(Tab.EQUIPMENT);
@@ -328,7 +328,7 @@ public class TutorialIsland extends Script {
                 Time.sleepUntil(() -> EquipmentSlot.MAINHAND.getItemName() == "Bronze dagger", 600, 5000);
 
             case 410:
-                talkTo("Combat Instructor", "");
+                talkTo("Combat Instructor");
             case 420:
                 if(!Tabs.isOpen(Tab.INVENTORY)) {
                     Tabs.open(Tab.INVENTORY);
@@ -347,21 +347,133 @@ public class TutorialIsland extends Script {
             case 440:
                 interact("", 9720, "Open");
             case 450:
-                interact("", 3313, "Attack");
-               // Time.sleepUntil(() -> , 400, 5000);
+                Npc npc = Npcs.getNearest(3313);
+                if (npc.isPositionWalkable()) {
+                    npc.interact("Attack");
+                    Time.sleepUntil(() -> Players.getLocal().isMoving(), 1500);
+                    Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
+                    Time.sleepUntil(() -> npc == null, 600, 15000);
+                }
+            case 470:
+                interact("", 9720, "Open");
+                talkTo("Combat Instructor");
+            case 480:
+                if(!EquipmentSlot.MAINHAND.getItemName().equals("Shortbow")) {
+                    Inventory.getFirst("Shortbow").interact("Wield");
+                    Time.sleepUntil(() -> EquipmentSlot.MAINHAND.getItemName() == "Shortbow", 600, 5000);
+                }
+                if(!EquipmentSlot.QUIVER.getItemName().equals("Bronze arrow")) {
+                    Inventory.getFirst("Bronze arrow").interact("Wield");
+                    Time.sleepUntil(() -> EquipmentSlot.OFFHAND.getItemName() == "Bronze arrow", 600, 5000);
+                }
+                Npc npcc = Npcs.getNearest(3313);
+                if (EquipmentSlot.MAINHAND.getItemName().equals("Shortbow") && EquipmentSlot.QUIVER.getItemName().equals("Bronze arrow")) {
+                    npcc.interact("Attack");
+                    Time.sleepUntil(() -> Players.getLocal().isMoving(), 1500);
+                    Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
+                    Time.sleepUntil(() -> npcc == null, 600, 15000);
+                }
+            case 500:
+                if(SceneObjects.getNearest("Ladder") == null){
+                    Movement.walkToRandomized(new Position(3111,9525));
+                } else {
+                    interact("Ladder", 0, "Climb-up");
+                }
+            case 510:
+                interact("Bank booth", 0, "Use");
+            case 520:
+                interact("Poll booth", 0, "Use");
+            case 525:
+                interact("", 9721, "Open");
+            case 530:
+                talkTo("Account Guide");
+            case 531:
+                if(!Tabs.isOpen(Tab.ACCOUNT_MANAGEMENT)) {
+                    Tabs.open(Tab.ACCOUNT_MANAGEMENT);
+                    Time.sleepUntil(() -> Tabs.isOpen(Tab.ACCOUNT_MANAGEMENT), 400, 5000);
+                }
+            case 532:
+                talkTo("Account Guide");
+            case 540:
+                interact("", 9722, "Open");
+            case 550:
+                if((!Npcs.getNearest("Brother Brace").isPositionWalkable())){
+                    interact("", 1106, "Open");
+                } else {
+                    talkTo("Brother Brace");
+                }
+            case 560:
+                if(!Tabs.isOpen(Tab.PRAYER)) {
+                    Tabs.open(Tab.PRAYER);
+                    Time.sleepUntil(() -> Tabs.isOpen(Tab.PRAYER), 400, 5000);
+                }
+            case 570:
+                if((!Npcs.getNearest("Brother Brace").isPositionWalkable())){
+                    interact("", 1106, "Open");
+                } else {
+                    talkTo("Brother Brace");
+                }
+            case 580:
+                if(!Tabs.isOpen(Tab.FRIENDS_LIST)) {
+                    Tabs.open(Tab.FRIENDS_LIST);
+                    Time.sleepUntil(() -> Tabs.isOpen(Tab.FRIENDS_LIST), 400, 5000);
+                }
+            case 600:
+                if((!Npcs.getNearest("Brother Brace").isPositionWalkable())){
+                    interact("", 1106, "Open");
+                } else {
+                    talkTo("Brother Brace");
+                }
+            case 610:
+                interact("", 9723, "Open");
+            case 620:
+                if(Npcs.getNearest("Magic Instructor") == null){
+                    Movement.walkToRandomized(new Position(3140,3087));
+                } else {
+                    talkTo("Magic Instructor");
+                }
+            case 630:
+                if(!Tabs.isOpen(Tab.MAGIC)) {
+                    Tabs.open(Tab.MAGIC);
+                    Time.sleepUntil(() -> Tabs.isOpen(Tab.MAGIC), 400, 5000);
+                }
+            case 640:
+                talkTo("Magic Instructor");
+            case 650:
+                Npc chicken = Npcs.getNearest("Chicken");
+                Magic.cast(Spell.Modern.WIND_STRIKE, chicken);
+                Time.sleep(Random.nextInt(200,600));
+            case 670:
+                talkTo("Magic Instructor");
+                if(Dialog.getChatOptions().length == 2){
+                    Dialog.process(0);
+                }
+                if(Dialog.getChatOptions().length == 3){
+                    Dialog.process(2);
+                }
+                return Random.nextInt(1000,1500);
+            case 1000:
+                accounts.remove(username);
+                Tabs.open(Tab.LOGOUT);
+                Time.sleep(Random.nextInt(500));
+                Interfaces.getComponent(182,8).click();
+                int account = Random.nextInt(0, accounts.size());
+                while(accounts.get(account)[2].equalsIgnoreCase("true")){
+                    account = Random.nextInt(0, accounts.size());
+                }
+                if(accounts.get(account)[2].equalsIgnoreCase("false")) {
+                    Login.enterCredentials(accounts.get(account)[0], accounts.get(account)[1]);
+                }
+
 
         }
 
         return 0;
     }
 
-    private boolean talkTo(String name, String action){
+    private boolean talkTo(String name){
         if (Npcs.getNearest(name) != null && !Dialog.isOpen() && Npcs.getNearest(name).isPositionWalkable()){
-            if(action != "") {
-                Npcs.getNearest(name).interact(action);
-            } else {
-                Npcs.getNearest(name).click();
-            }
+            Npcs.getNearest(name).click();
             Time.sleepUntil(Dialog::isOpen, 1000, 10000);
             return true;
         }
