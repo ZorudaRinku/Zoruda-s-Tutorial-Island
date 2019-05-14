@@ -1,8 +1,8 @@
 package main;
 
+import org.rspeer.RSPeer;
 import org.rspeer.runetek.adapter.component.InterfaceComponent;
 import org.rspeer.runetek.adapter.scene.Npc;
-import org.rspeer.runetek.api.Login;
 import org.rspeer.runetek.api.Varps;
 import org.rspeer.runetek.api.commons.Time;
 import org.rspeer.runetek.api.commons.math.Random;
@@ -10,6 +10,7 @@ import org.rspeer.runetek.api.component.Dialog;
 import org.rspeer.runetek.api.component.Interfaces;
 import org.rspeer.runetek.api.component.tab.*;
 import org.rspeer.runetek.api.movement.Movement;
+import org.rspeer.runetek.api.movement.position.Area;
 import org.rspeer.runetek.api.movement.position.Position;
 import org.rspeer.runetek.api.scene.Npcs;
 import org.rspeer.runetek.api.scene.Players;
@@ -22,28 +23,35 @@ import org.rspeer.ui.Log;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.*;
-import java.util.ArrayList;
+import java.util.function.BooleanSupplier;
 
 
 @ScriptMeta(name = "Zoruda's Tutorial Island",  desc = "My tut island script for private use", developer = "Zoruda", category = ScriptCategory.OTHER)
 public class TutorialIsland extends Script {
 
-    private int config;
-    public static final int ValueNumber = 281;
-    Robot robot;
-    String username;
-    ArrayList<String[]> accounts = new ArrayList<String[]>();
+    private static final int ValueNumber = 281;
+    private Robot robot;
+
+    private Area chickens = Area.polygonal(
+            new Position(3137, 3091, 0),
+            new Position(3140, 3088, 0),
+            new Position(3140, 3087, 0),
+            new Position(3144, 3087, 0),
+            new Position(3144, 3090, 0),
+            new Position(3142, 3092, 0),
+            new Position(3137, 3092, 0));
 
 
     @Override
     public void onStart() {
-
-
+        //Login.enterCredentials(RSPeer.getQuickStartArgs().getRsUsername(),RSPeer.getQuickStartArgs().getRsPassword());
     }
 
     @Override
     public int loop() {
-        config = Varps.get(ValueNumber);
+
+
+        int config = Varps.get(ValueNumber);
 
         if (Players.getLocal().getAnimation() != -1 || Players.getLocal().isMoving()) {
             return 1000;
@@ -56,33 +64,44 @@ public class TutorialIsland extends Script {
 
         }
 
+        if(Interfaces.getComponent(162,44).getText().equals("I can't reach that!") || Interfaces.getComponent(162,44).getText().equals("Someone is already attacking that!")){
+            Interfaces.getComponent(162, 45).click();
+        }
+
+        BooleanSupplier Animating = () -> Players.getLocal().isAnimating();
+        BooleanSupplier Moving = () -> Players.getLocal().isMoving();
         switch (config){
             case 1:
-                if(Interfaces.isOpen(558) && !Interfaces.getComponent(162, 45).isVisible()){
+                if(Interfaces.isOpen(558)){
                     Interfaces.getComponent(558,7).click();
-                    return 1000;
+                    Time.sleep(1000);
                 }
-                if(Interfaces.getComponent(162, 45).getText().equals("*")) {
+                if(Interfaces.getComponent(162, 45) != null && Interfaces.getComponent(162, 45).getText().equals("*")) {
                     try {
                         robot = new Robot();
                     } catch (AWTException e) {
                         return 300;
                     }
-                    username = getAccount().getUsername().split("@gmail.com")[0];
+                    String username = getAccount().getUsername().split("@gmail.com")[0];
                     username = username.substring(0, Math.min(username.length(), 12));
                     type(username);
                     robot.keyPress(KeyEvent.VK_ENTER);
-                }
-                if(Interfaces.isOpen(558) && Interfaces.getComponent(558, 12).getText().contains("not available")){
-                    Log.severe("Taken");
-                    int rand = Random.nextInt(14,16);
-                    Interfaces.getComponent(558, rand).click();
-                    Log.info(rand);
-                    return Random.nextInt(600,1500);
-                }
-                if(Interfaces.isOpen(558) && Interfaces.getComponent(558, 12).getText().contains("Great!")) {
-                    Interfaces.getComponent(558, 18).click();
-                    return Random.nextInt(600,1500);
+                    Time.sleep(Random.nextInt(100,500));
+                    robot.keyRelease(KeyEvent.VK_ENTER);
+                    Time.sleep(Random.nextInt(6000,15000));
+                    if(Interfaces.isOpen(558) && Interfaces.getComponent(558, 12).getText().contains("not available")){
+                        Log.severe("Taken");
+                        int rand = Random.nextInt(14,16);
+
+                        Interfaces.getComponent(558, rand).click();
+                        Log.info(rand);
+                        return Random.nextInt(600,1500);
+                    }
+                    if(Interfaces.isOpen(558) && Interfaces.getComponent(558, 12).getText().contains("Great!")) {
+                        Log.fine("yeet");
+                        Interfaces.getComponent(558, 18).click();
+                        return Random.nextInt(600,1500);
+                    }
                 }
                 if(Interfaces.isOpen(269) && Interfaces.getComponent(269, 97).getText().toLowerCase().contains("welcome to runescape")){
                     if(Random.nextInt(1,5) == 5){
@@ -142,7 +161,7 @@ public class TutorialIsland extends Script {
                             colorSkinButtonRight = Interfaces.getComponent(269, 131)
                     } ;
 
-                    for(int i = 0; i < Random.nextInt(10, buttons.length); i++) {
+                    for(int i = 0; i < Random.nextInt(buttons.length - 5, buttons.length * 3); i++) {
                         int b = Random.nextInt(0, buttons.length);
                         for(int t = 0; t < Random.nextInt(0,8); t++) {
                             buttons[b].click();
@@ -152,6 +171,7 @@ public class TutorialIsland extends Script {
                     Time.sleep(Random.nextInt(400,3000));
                     Interfaces.getComponent(269, 99).click();
                 }
+                break;
             case 2:
                 talkTo("Gielinor Guide");
                 if(Dialog.isOpen() && !Dialog.canContinue()){
@@ -159,39 +179,50 @@ public class TutorialIsland extends Script {
                     Dialog.process(Random.nextInt(0, Dialog.getChatOptions().length));
 
                 }
+                break;
             case 3:
                 if(!Tabs.isOpen(Tab.OPTIONS)){
                     Tabs.open(Tab.OPTIONS);
+                    Time.sleep(Random.nextInt(300,800));
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.OPTIONS), 400, 5000);
                 }
+                break;
             case 7:
                 talkTo("Gielinor Guide");
+                break;
             case 10:
                 interact("Door", 0, "Open");
-                Time.sleepUntil(() -> Players.getLocal().isMoving(), 1500);
+                Time.sleepUntil(Moving, 1500);
                 Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
+                break;
             case 20:
+            case 60:
                 talkTo("Survival Expert");
+                break;
             case 30:
                 if(!Tabs.isOpen(Tab.INVENTORY)){
                     Tabs.open(Tab.INVENTORY);
-                    Time.sleepUntil(() -> Tabs.isOpen(Tab.INVENTORY), 400, 5000);
+                    Time.sleep(Random.nextInt(300,800));
+                    Time.sleepUntil(() -> Tabs.isOpen(Tab.INVENTORY), 1000, 5000);
                 }
+                break;
             case 40:
                 interact("Fishing spot", 0, "Net");
                 Time.sleepUntil(() -> Inventory.contains("Raw shrimps"), 1000, 10000);
+                break;
             case 50:
                 if(!Tabs.isOpen(Tab.SKILLS)){
                     Tabs.open(Tab.SKILLS);
+                    Time.sleep(Random.nextInt(300,800));
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.SKILLS), 400, 5000);
                 }
-            case 60:
-                talkTo("Survival Expert");
+                break;
             case 70:
                 interact("Tree", 0, "Chop down");
                 Time.sleepUntil(() -> Inventory.contains("Logs"), 1000, 10000);
+                break;
             case 80:
-                if(SceneObjects.getFirstAt(Players.getLocal().getPosition()).getName().equals("Fire")){
+                if(SceneObjects.getFirstAt(Players.getLocal().getPosition()) != null && SceneObjects.getFirstAt(Players.getLocal().getPosition()).getName().equals("Fire")){
                     Movement.walkTo(new Position(Random.nextInt(3090, 3110),Random.nextInt(3075, 3110)));
                     return 200;
                 } // 3103 3098
@@ -199,232 +230,296 @@ public class TutorialIsland extends Script {
                 if(Inventory.getFirst("Tinderbox").interact("Use")) {
                     Time.sleep(200);
                     if(Inventory.getFirst("Logs").interact("Use")) {
-                        Time.sleepUntil(()->Players.getLocal().isMoving(),1500);
+                        Time.sleepUntil(Moving,1500);
                     }
                 }
-                Time.sleepUntil(() -> Players.getLocal().isAnimating(), 1000, 1000);
+                Time.sleepUntil(Animating, 1000, 1000);
+                break;
             case 90:
                 if(Inventory.getFirst("Raw shrimps").interact("Use")) {
                     Time.sleep(200);
                     if(SceneObjects.getNearest("Fire").interact("Use")) {
-                        Time.sleepUntil(()->Players.getLocal().isMoving(),1500);
+                        Time.sleepUntil(Moving,1500);
                     }
                 }
+                break;
             case 120:
                 interact("Gate", 0, "Open");
+                break;
             case 130:
                 interact("Door", 0, "Open");
+                break;
             case 140:
                 talkTo("Master Chef");
+                break;
             case 150:
                 if(Inventory.getFirst("Pot of flour").interact("Use")) {
                     Time.sleep(200);
                     Inventory.getFirst("Bucket of water").interact("Use");
                     Time.sleepUntil(()->Inventory.contains("Bread dough"),1500);
                 }
+                break;
             case 160:
                 if(Inventory.getFirst("Bread dough").interact("Use")) {
                     Time.sleep(200);
                     if(SceneObjects.getNearest("Range").interact("Use")) {
-                        Time.sleepUntil(()->Players.getLocal().isMoving(),1500);
+                        Time.sleepUntil(Moving,1500);
                     }
                 }
-                Time.sleepUntil(() -> Players.getLocal().isAnimating(), 1000, 1000);
+                Time.sleepUntil(Animating, 1000, 1000);
+                break;
             case 170:
                 interact("", 9710, "Open");
+                break;
             case 200:
                 if(!Movement.isRunEnabled()){
                     Movement.toggleRun(true);
                 }
                 if(Players.getLocal().getPosition().getY() < 3122){
                     Movement.walkToRandomized(new Position(3086, 3126));
-                    Time.sleepUntil(() -> Players.getLocal().isMoving(), 1500);
+                    Time.sleepUntil(Moving, 1500);
                     Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
                 } else {
                     interact("Door", 0, "Open");
                 }
+                break;
             case 220:
                 talkTo("Quest Guide");
+                break;
             case 230:
                 if(!Tabs.isOpen(Tab.QUEST_LIST)) {
                     Tabs.open(Tab.QUEST_LIST);
+                    Time.sleep(Random.nextInt(300,800));
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.QUEST_LIST), 400, 5000);
                 }
+                break;
             case 240:
                 talkTo("Quest Guide");
+                break;
             case 250:
                 interact("Ladder", 0, "Climb-down");
+                break;
             case 260:
                 if(Players.getLocal().getPosition().getY() > 9509){
                     Movement.walkToRandomized(new Position(3080, 9506));
-                    Time.sleepUntil(() -> Players.getLocal().isMoving(), 1500);
+                    Time.sleepUntil(Moving, 1500);
                     Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
                 }
+                talkTo("Mining Instructor");
+                break;
             case 270:
                 talkTo("Mining Instructor");
+                break;
             case 300:
                 //10080
                 interact("", 10080, "Mine");
+                break;
             case 310:
                 interact("", 10079, "Mine");
+                break;
             case 320:
                 SceneObjects.getNearest("Furnace").interact("Use");
+                break;
             case 330:
                 talkTo("Mining Instructor");
+                break;
             case 340:
                 interact("Anvil", 0, "Smith");
+                break;
             case 350:
                 Interfaces.getComponent(312,2).click();
-                Time.sleepUntil(() -> Players.getLocal().isAnimating(), 1500);
+                Time.sleepUntil(Animating, 1500);
                 Time.sleepUntil(() -> !Players.getLocal().isAnimating(), 600, 5000);
+                break;
             case 360:
                 if(SceneObjects.getNearest("Gate") != null){
                     interact("Gate", 0, "Open");
                 } else {
                     Movement.walkToRandomized(new Position(3091,9497));
                 }
+                break;
             case 370:
                 talkTo("Combat Instructor");
+                break;
             case 390:
                 if(!Tabs.isOpen(Tab.EQUIPMENT)) {
                     Tabs.open(Tab.EQUIPMENT);
+                    Time.sleep(Random.nextInt(300,800));
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.EQUIPMENT), 400, 5000);
                 }
-
+                break;
             case 400:
                 if(!Tabs.isOpen(Tab.EQUIPMENT)) {
                     Tabs.open(Tab.EQUIPMENT);
+                    Time.sleep(Random.nextInt(300,800));
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.EQUIPMENT), 400, 5000);
                 }
                 Interfaces.getComponent(387,17).click();
                 Time.sleepUntil(() -> Interfaces.isOpen(387), 600, 5000);
                 Time.sleep(Random.nextInt(300, 600));
                 Interfaces.closeAll();
+                break;
             case 405:
                 if(!Tabs.isOpen(Tab.INVENTORY)) {
                     Tabs.open(Tab.INVENTORY);
+                    Time.sleep(Random.nextInt(300,800));
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.INVENTORY), 400, 5000);
                 }
                 Inventory.getFirst("Bronze dagger").interact("Wield");
                 Time.sleepUntil(() -> EquipmentSlot.MAINHAND.getItemName() == "Bronze dagger", 600, 5000);
-
+                break;
             case 410:
                 talkTo("Combat Instructor");
+                break;
             case 420:
                 if(!Tabs.isOpen(Tab.INVENTORY)) {
                     Tabs.open(Tab.INVENTORY);
+                    Time.sleep(Random.nextInt(300,800));
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.INVENTORY), 400, 5000);
                 }
                 Inventory.getFirst("Bronze sword").interact("Wield");
-                Time.sleepUntil(() -> EquipmentSlot.MAINHAND.getItemName() == "Bronze sword", 600, 5000);
+                Time.sleepUntil(() -> EquipmentSlot.MAINHAND.getItemName().equals("Bronze sword"), 600, 5000);
 
                 Inventory.getFirst("Wooden shield").interact("Wield");
-                Time.sleepUntil(() -> EquipmentSlot.OFFHAND.getItemName() == "Wooden shield", 600, 5000);
+                Time.sleepUntil(() -> EquipmentSlot.OFFHAND.getItemName().equals("Wooden shield"), 600, 5000);
+                break;
             case 430:
                 if(!Tabs.isOpen(Tab.COMBAT)) {
                     Tabs.open(Tab.COMBAT);
+                    Time.sleep(Random.nextInt(300,800));
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.COMBAT), 400, 5000);
                 }
+                break;
             case 440:
                 interact("", 9720, "Open");
+                break;
             case 450:
                 Npc npc = Npcs.getNearest(3313);
                 if (npc.isPositionWalkable()) {
                     npc.interact("Attack");
-                    Time.sleepUntil(() -> Players.getLocal().isMoving(), 1500);
+                    Time.sleepUntil(Moving, 1500);
                     Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
                     Time.sleepUntil(() -> npc == null, 600, 15000);
                 }
+                break;
             case 470:
                 interact("", 9720, "Open");
                 talkTo("Combat Instructor");
+                break;
             case 480:
                 if(!EquipmentSlot.MAINHAND.getItemName().equals("Shortbow")) {
                     Inventory.getFirst("Shortbow").interact("Wield");
-                    Time.sleepUntil(() -> EquipmentSlot.MAINHAND.getItemName() == "Shortbow", 600, 5000);
+                    Time.sleepUntil(() -> EquipmentSlot.MAINHAND.getItemName().equals("Shortbow"), 600, 5000);
                 }
                 if(!EquipmentSlot.QUIVER.getItemName().equals("Bronze arrow")) {
                     Inventory.getFirst("Bronze arrow").interact("Wield");
-                    Time.sleepUntil(() -> EquipmentSlot.OFFHAND.getItemName() == "Bronze arrow", 600, 5000);
+                    Time.sleepUntil(() -> EquipmentSlot.OFFHAND.getItemName().equals("Bronze arrow"), 600, 5000);
                 }
                 Npc npcc = Npcs.getNearest(3313);
                 if (EquipmentSlot.MAINHAND.getItemName().equals("Shortbow") && EquipmentSlot.QUIVER.getItemName().equals("Bronze arrow")) {
                     npcc.interact("Attack");
-                    Time.sleepUntil(() -> Players.getLocal().isMoving(), 1500);
+                    Time.sleepUntil(Moving, 1500);
                     Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
                     Time.sleepUntil(() -> npcc == null, 600, 15000);
                 }
+                break;
             case 500:
                 if(SceneObjects.getNearest("Ladder") == null){
                     Movement.walkToRandomized(new Position(3111,9525));
                 } else {
                     interact("Ladder", 0, "Climb-up");
                 }
+                break;
             case 510:
                 interact("Bank booth", 0, "Use");
+                break;
             case 520:
                 interact("Poll booth", 0, "Use");
+                break;
             case 525:
                 interact("", 9721, "Open");
+                break;
             case 530:
+            case 532:
                 talkTo("Account Guide");
+                break;
             case 531:
                 if(!Tabs.isOpen(Tab.ACCOUNT_MANAGEMENT)) {
                     Tabs.open(Tab.ACCOUNT_MANAGEMENT);
+                    Time.sleep(Random.nextInt(300,800));
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.ACCOUNT_MANAGEMENT), 400, 5000);
                 }
-            case 532:
-                talkTo("Account Guide");
+                break;
             case 540:
                 interact("", 9722, "Open");
+                break;
             case 550:
-                if((!Npcs.getNearest("Brother Brace").isPositionWalkable())){
+                if(Npcs.getNearest("Brother Brace") == null){
+                    Movement.walkToRandomized(new Position(3121, 3106));
+                }else if((!Npcs.getNearest("Brother Brace").isPositionWalkable())){
                     interact("", 1106, "Open");
                 } else {
                     talkTo("Brother Brace");
                 }
+                break;
             case 560:
                 if(!Tabs.isOpen(Tab.PRAYER)) {
                     Tabs.open(Tab.PRAYER);
+                    Time.sleep(Random.nextInt(300,800));
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.PRAYER), 400, 5000);
                 }
+                break;
             case 570:
-                if((!Npcs.getNearest("Brother Brace").isPositionWalkable())){
-                    interact("", 1106, "Open");
-                } else {
-                    talkTo("Brother Brace");
-                }
-            case 580:
-                if(!Tabs.isOpen(Tab.FRIENDS_LIST)) {
-                    Tabs.open(Tab.FRIENDS_LIST);
-                    Time.sleepUntil(() -> Tabs.isOpen(Tab.FRIENDS_LIST), 400, 5000);
-                }
             case 600:
                 if((!Npcs.getNearest("Brother Brace").isPositionWalkable())){
                     interact("", 1106, "Open");
                 } else {
                     talkTo("Brother Brace");
                 }
+                break;
+            case 580:
+                if(!Tabs.isOpen(Tab.FRIENDS_LIST)) {
+                    Tabs.open(Tab.FRIENDS_LIST);
+                    Time.sleep(Random.nextInt(300,800));
+                    Time.sleepUntil(() -> Tabs.isOpen(Tab.FRIENDS_LIST), 400, 5000);
+                }
+                break;
             case 610:
                 interact("", 9723, "Open");
+                break;
             case 620:
                 if(Npcs.getNearest("Magic Instructor") == null){
                     Movement.walkToRandomized(new Position(3140,3087));
                 } else {
                     talkTo("Magic Instructor");
                 }
+                break;
             case 630:
                 if(!Tabs.isOpen(Tab.MAGIC)) {
                     Tabs.open(Tab.MAGIC);
+                    Time.sleep(Random.nextInt(300,800));
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.MAGIC), 400, 5000);
                 }
+                break;
             case 640:
                 talkTo("Magic Instructor");
+                break;
             case 650:
+                if(!chickens.contains(Players.getLocal().getPosition())){
+                    Movement.walkToRandomized(chickens.getCenter());
+                    return 1000;
+                }
+                if(Interfaces.getComponent(162,44).getText().equals("I can't reach that!") || Interfaces.getComponent(162,44).getText().equals("Someone is already attacking that!")){
+                    Interfaces.getComponent(162, 45).click();
+                }
                 Npc chicken = Npcs.getNearest("Chicken");
                 Magic.cast(Spell.Modern.WIND_STRIKE, chicken);
                 Time.sleep(Random.nextInt(200,600));
+                break;
             case 670:
+                if(Interfaces.getComponent(162,44).getText().equals("I can't reach that!") || Interfaces.getComponent(162,44).getText().equals("Someone is already attacking that!")){
+                    Interfaces.getComponent(162, 45).click();
+                }
                 talkTo("Magic Instructor");
                 if(Dialog.getChatOptions().length == 2){
                     Dialog.process(0);
@@ -432,8 +527,12 @@ public class TutorialIsland extends Script {
                 if(Dialog.getChatOptions().length == 3){
                     Dialog.process(2);
                 }
-                return Random.nextInt(1000,1500);
+                Time.sleep(Random.nextInt(1500,3000));
+                break;
             case 1000:
+                Time.sleep(10000);
+                replaceSelected(RSPeer.getQuickStartArgs().getRsUsername() + "," + RSPeer.getQuickStartArgs().getRsPassword());
+                RSPeer.shutdown();
                 /*accounts.remove(username);
                 Tabs.open(Tab.LOGOUT);
                 Time.sleep(Random.nextInt(500));
@@ -452,23 +551,54 @@ public class TutorialIsland extends Script {
         return 0;
     }
 
-    private boolean talkTo(String name){
+    public static void replaceSelected(String replaceWith) {
+        try {
+            // input the file content to the StringBuffer "input"
+            BufferedReader file = new BufferedReader(new FileReader("/home/zoruda/Coding/Runescape/Zoruda-s-Tutorial-Island/accounts.csv"));
+            StringBuffer inputBuffer = new StringBuffer();
+            String line;
+
+            while ((line = file.readLine()) != null) {
+                inputBuffer.append(line);
+                inputBuffer.append('\n');
+            }
+            file.close();
+            String inputStr = inputBuffer.toString();
+
+            Log.info(inputStr);
+
+            // logic to replace lines in the string (could use regex here to be generic)
+            inputStr = inputStr.replace(replaceWith + ",FALSE", replaceWith + ",TRUE");
+            Log.info(replaceWith);
+
+            // display the new file for debugging
+            Log.info("----------------------------------\n" + inputStr);
+
+            // write the new string with the replaced line OVER the same file
+            FileOutputStream fileOut = new FileOutputStream("/home/zoruda/Coding/Runescape/Zoruda-s-Tutorial-Island/accounts.csv");
+            fileOut.write(inputStr.getBytes());
+            fileOut.close();
+
+        } catch (Exception e) {
+            Log.severe("Problem reading file." + e);
+        }
+    }
+
+    private void talkTo(String name){
         if (Npcs.getNearest(name) != null && !Dialog.isOpen() && Npcs.getNearest(name).isPositionWalkable()){
             Npcs.getNearest(name).click();
             Time.sleepUntil(Dialog::isOpen, 1000, 10000);
-            return true;
         }
-        return false;
     }
 
-    private boolean interact(String name, int id, String action){
+    private void interact(String name, int id, String action){
         try {
             if (name != "") {
                 if (SceneObjects.getNearest(name).isPositionWalkable()) {
                     SceneObjects.getNearest(name).interact(action);
                     Time.sleepUntil(() -> Players.getLocal().isMoving(), 1500);
                     Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
-                    return true;
+                    return;
                 }
             }
             if (id != 0) {
@@ -476,7 +606,6 @@ public class TutorialIsland extends Script {
                     SceneObjects.getNearest(id).interact(action);
                     Time.sleepUntil(() -> Players.getLocal().isMoving(), 1500);
                     Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
-                    return true;
                 }
             }
         }
@@ -486,7 +615,7 @@ public class TutorialIsland extends Script {
                     Npcs.getNearest(name).interact(action);
                     Time.sleepUntil(() -> Players.getLocal().isMoving(), 1500);
                     Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
-                    return true;
+                    return;
                 }
             }
             if (id != 0) {
@@ -494,11 +623,23 @@ public class TutorialIsland extends Script {
                     Npcs.getNearest(id).interact(action);
                     Time.sleepUntil(() -> Players.getLocal().isMoving(), 1500);
                     Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
-                    return true;
                 }
             }
         }
-        return false;
+    }
+
+    public static void appendStrToFile(String fileName,
+                                       String str)
+    {
+        try {
+            BufferedWriter out = new BufferedWriter(
+                    new FileWriter(fileName, true));
+            out.write(str);
+            out.close();
+        }
+        catch (IOException e) {
+            System.out.println("exception occurred" + e);
+        }
     }
 
     private void type(String s){

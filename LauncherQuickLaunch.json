@@ -1,0 +1,18 @@
+{
+    "Clients": [
+        {
+            "UseProxy": false,
+            "ScriptArgs": "",
+            "RsPassword": "references",
+            "ScriptName": "Zoruda's Tutorial Island",
+            "ProxyIp": "",
+            "ProxyUser": "",
+            "IsRepoScript": false,
+            "World": 308,
+            "ProxyPort": 0,
+            "RsUsername": "protectprogrammes4125@gmail.com",
+            "ProxyPass": ""
+        }
+    ],
+    "AutoUpdateClient": true
+}
