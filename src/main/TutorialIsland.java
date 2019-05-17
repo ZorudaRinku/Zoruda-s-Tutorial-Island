@@ -6,12 +6,16 @@ import org.rspeer.runetek.adapter.scene.Npc;
 import org.rspeer.runetek.api.Varps;
 import org.rspeer.runetek.api.commons.Time;
 import org.rspeer.runetek.api.commons.math.Random;
+import org.rspeer.runetek.api.component.Bank;
 import org.rspeer.runetek.api.component.Dialog;
 import org.rspeer.runetek.api.component.Interfaces;
+import org.rspeer.runetek.api.component.Production;
 import org.rspeer.runetek.api.component.tab.*;
+import org.rspeer.runetek.api.input.Keyboard;
 import org.rspeer.runetek.api.movement.Movement;
 import org.rspeer.runetek.api.movement.position.Area;
 import org.rspeer.runetek.api.movement.position.Position;
+import org.rspeer.runetek.api.scene.HintArrow;
 import org.rspeer.runetek.api.scene.Npcs;
 import org.rspeer.runetek.api.scene.Players;
 import org.rspeer.runetek.api.scene.SceneObjects;
@@ -21,16 +25,19 @@ import org.rspeer.script.ScriptMeta;
 import org.rspeer.ui.Log;
 
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.util.function.BooleanSupplier;
 
 
-@ScriptMeta(name = "Zoruda's Tutorial Island",  desc = "My tut island script for private use", developer = "Zoruda", category = ScriptCategory.OTHER)
+@ScriptMeta(name = "Zoruda's Tutorial Island",  desc = "My tut island script for private use", version = 1.1, developer = "Zoruda", category = ScriptCategory.OTHER)
 public class TutorialIsland extends Script {
 
     private static final int ValueNumber = 281;
     private Robot robot;
+    private int mineExtra = Random.nextInt(1,6);
+    private int afterIsland = Random.nextInt(1,8);
 
     private Area chickens = Area.polygonal(
             new Position(3137, 3091, 0),
@@ -50,8 +57,11 @@ public class TutorialIsland extends Script {
     @Override
     public int loop() {
 
-
         int config = Varps.get(ValueNumber);
+
+        BooleanSupplier Animating = () -> Players.getLocal().isAnimating();
+        BooleanSupplier Moving = () -> Players.getLocal().isMoving();
+        BooleanSupplier NotMoving = () -> !Players.getLocal().isMoving();
 
         if (Players.getLocal().getAnimation() != -1 || Players.getLocal().isMoving()) {
             return 1000;
@@ -60,47 +70,42 @@ public class TutorialIsland extends Script {
         if(Dialog.isOpen() && Dialog.canContinue()){
 
             Dialog.processContinue();
-            return Random.nextInt(500, 1500);
+            return 900;
 
         }
 
-        if(Interfaces.getComponent(162,44).getText().equals("I can't reach that!") || Interfaces.getComponent(162,44).getText().equals("Someone is already attacking that!")){
-            Interfaces.getComponent(162, 45).click();
+        if(Players.getLocal().getPosition().distance(HintArrow.getPosition()) > 20){
+            Movement.walkToRandomized(HintArrow.getPosition());
+            Time.sleepUntil(Moving, 1500);
+            Time.sleepUntil(NotMoving, 600, 5000);
         }
 
-        BooleanSupplier Animating = () -> Players.getLocal().isAnimating();
-        BooleanSupplier Moving = () -> Players.getLocal().isMoving();
         switch (config){
+            case 0:
+                return 1000;
             case 1:
-                if(Interfaces.isOpen(558)){
+                if(Interfaces.getComponent(558,11) != null && Interfaces.getComponent(558,11).getText().equalsIgnoreCase("") && !Interfaces.getComponent(162, 45).getText().contains("*")){
                     Interfaces.getComponent(558,7).click();
                     Time.sleep(1000);
                 }
-                if(Interfaces.getComponent(162, 45) != null && Interfaces.getComponent(162, 45).getText().equals("*")) {
-                    try {
-                        robot = new Robot();
-                    } catch (AWTException e) {
-                        return 300;
-                    }
-                    String username = getAccount().getUsername().split("@gmail.com")[0];
-                    username = username.substring(0, Math.min(username.length(), 12));
-                    type(username);
-                    robot.keyPress(KeyEvent.VK_ENTER);
-                    Time.sleep(Random.nextInt(100,500));
-                    robot.keyRelease(KeyEvent.VK_ENTER);
-                    Time.sleep(Random.nextInt(6000,15000));
-                    if(Interfaces.isOpen(558) && Interfaces.getComponent(558, 12).getText().contains("not available")){
-                        Log.severe("Taken");
-                        int rand = Random.nextInt(14,16);
-
-                        Interfaces.getComponent(558, rand).click();
-                        Log.info(rand);
-                        return Random.nextInt(600,1500);
-                    }
-                    if(Interfaces.isOpen(558) && Interfaces.getComponent(558, 12).getText().contains("Great!")) {
-                        Log.fine("yeet");
+                if(Interfaces.isOpen(558)) {
+                    if (Interfaces.getComponent(558, 12) != null && Interfaces.getComponent(558, 12).getText().contains("Great!")) {
                         Interfaces.getComponent(558, 18).click();
-                        return Random.nextInt(600,1500);
+                        Time.sleepUntil(() -> !Interfaces.isOpen(558), 600, 7000);
+                        return Random.nextInt(500, 1000);
+                    }
+                    if (Interfaces.isOpen(558) && Interfaces.getComponent(558, 12).getText().contains("not available")) {
+                        int rand = Random.nextInt(14, 16);
+                        Interfaces.getComponent(558, rand).click();
+                        return Random.nextInt(600, 1500);
+                    }
+                    if (Interfaces.getComponent(162, 45) != null && Interfaces.getComponent(162, 45).getText().equals("*")) {
+                        String username = getAccount().getUsername().split("@gmail.com")[0];
+                        username = username.substring(0, Math.min(username.length(), 12));
+                        type(username);
+                        Keyboard.pressEnter();
+                        Time.sleepUntil(() -> Interfaces.getComponent(558, 12).getText().contains("Requesting"), 100, 1500);
+                        Time.sleepUntil(() -> !Interfaces.getComponent(558, 12).getText().contains("Requesting"), 300, 7000);
                     }
                 }
                 if(Interfaces.isOpen(269) && Interfaces.getComponent(269, 97).getText().toLowerCase().contains("welcome to runescape")){
@@ -193,7 +198,7 @@ public class TutorialIsland extends Script {
             case 10:
                 interact("Door", 0, "Open");
                 Time.sleepUntil(Moving, 1500);
-                Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
+                Time.sleepUntil(NotMoving, 600, 5000);
                 break;
             case 20:
             case 60:
@@ -278,7 +283,7 @@ public class TutorialIsland extends Script {
                 if(Players.getLocal().getPosition().getY() < 3122){
                     Movement.walkToRandomized(new Position(3086, 3126));
                     Time.sleepUntil(Moving, 1500);
-                    Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
+                    Time.sleepUntil(NotMoving, 600, 5000);
                 } else {
                     interact("Door", 0, "Open");
                 }
@@ -311,14 +316,34 @@ public class TutorialIsland extends Script {
                 talkTo("Mining Instructor");
                 break;
             case 300:
-                //10080
+                if(mineExtra == 1){
+                    for(int i = 0; i < Random.nextInt(2,8); i++){
+                        if (Players.getLocal().getAnimation() != -1 || Players.getLocal().isMoving()) {
+                            Time.sleep(Random.nextInt(500,2000));
+                        }
+                        interact("", 10080, "Mine");
+                    }
+                }
                 interact("", 10080, "Mine");
                 break;
             case 310:
+                if(mineExtra == 1){
+                    for(int i = 0; i < Random.nextInt(2,8); i++){
+                        if (Players.getLocal().getAnimation() != -1 || Players.getLocal().isMoving()) {
+                            Time.sleep(Random.nextInt(500,2000));
+                        }
+                        interact("", 10079, "Mine");
+                    }
+                }
                 interact("", 10079, "Mine");
                 break;
             case 320:
                 SceneObjects.getNearest("Furnace").interact("Use");
+                if(Production.isOpen()){
+                    Production.initiate("Bronze bar");
+                    Time.sleepUntil(Animating, 2000);
+                    Time.sleepUntil(() -> !Players.getLocal().isAnimating(), 600, 10000);
+                }
                 break;
             case 330:
                 talkTo("Mining Instructor");
@@ -339,6 +364,7 @@ public class TutorialIsland extends Script {
                 }
                 break;
             case 370:
+            case 410:
                 talkTo("Combat Instructor");
                 break;
             case 390:
@@ -366,10 +392,7 @@ public class TutorialIsland extends Script {
                     Time.sleepUntil(() -> Tabs.isOpen(Tab.INVENTORY), 400, 5000);
                 }
                 Inventory.getFirst("Bronze dagger").interact("Wield");
-                Time.sleepUntil(() -> EquipmentSlot.MAINHAND.getItemName() == "Bronze dagger", 600, 5000);
-                break;
-            case 410:
-                talkTo("Combat Instructor");
+                Time.sleepUntil(() -> EquipmentSlot.MAINHAND.getItemName().equals("Bronze dagger"), 600, 5000);
                 break;
             case 420:
                 if(!Tabs.isOpen(Tab.INVENTORY)) {
@@ -391,21 +414,34 @@ public class TutorialIsland extends Script {
                 }
                 break;
             case 440:
-                interact("", 9720, "Open");
-                break;
             case 450:
+            case 460:
                 Npc npc = Npcs.getNearest(3313);
-                if (npc.isPositionWalkable()) {
+                if (!npc.isPositionInteractable()){
+                    interact("", 9720, "Open");
+                    Time.sleepUntil(npc::isPositionInteractable, 1000, 5000);
+                }
+                if (npc.isPositionInteractable() && !Players.getLocal().isHealthBarVisible()) {
                     npc.interact("Attack");
                     Time.sleepUntil(Moving, 1500);
-                    Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
+                    Time.sleepUntil(NotMoving, 600, 5000);
                     Time.sleepUntil(() -> npc == null, 600, 15000);
+                } else {
+                    return Random.nextInt(300,600);
                 }
+                Time.sleepUntil(() -> config == 470, 600, 10000);
+
                 break;
             case 470:
                 interact("", 9720, "Open");
-                talkTo("Combat Instructor");
+                Npc instructor = Npcs.getNearest("Combat Instructor");
+                if(instructor.isPositionWalkable()){
+                    talkTo("Combat Instructor");
+                } else {
+                    interact("", 9720, "Open");
+                }
                 break;
+            case 490:
             case 480:
                 if(!EquipmentSlot.MAINHAND.getItemName().equals("Shortbow")) {
                     Inventory.getFirst("Shortbow").interact("Wield");
@@ -416,10 +452,8 @@ public class TutorialIsland extends Script {
                     Time.sleepUntil(() -> EquipmentSlot.OFFHAND.getItemName().equals("Bronze arrow"), 600, 5000);
                 }
                 Npc npcc = Npcs.getNearest(3313);
-                if (EquipmentSlot.MAINHAND.getItemName().equals("Shortbow") && EquipmentSlot.QUIVER.getItemName().equals("Bronze arrow")) {
+                if (EquipmentSlot.MAINHAND.getItemName().equals("Shortbow") && EquipmentSlot.QUIVER.getItemName().equals("Bronze arrow") && !Players.getLocal().isHealthBarVisible()) {
                     npcc.interact("Attack");
-                    Time.sleepUntil(Moving, 1500);
-                    Time.sleepUntil(() -> !Players.getLocal().isMoving(), 600, 5000);
                     Time.sleepUntil(() -> npcc == null, 600, 15000);
                 }
                 break;
@@ -530,32 +564,83 @@ public class TutorialIsland extends Script {
                 Time.sleep(Random.nextInt(1500,3000));
                 break;
             case 1000:
-                Time.sleep(10000);
-                replaceSelected(RSPeer.getQuickStartArgs().getRsUsername() + "," + RSPeer.getQuickStartArgs().getRsPassword());
-                RSPeer.shutdown();
-                /*accounts.remove(username);
-                Tabs.open(Tab.LOGOUT);
-                Time.sleep(Random.nextInt(500));
-                Interfaces.getComponent(182,8).click();
-                int account = Random.nextInt(0, accounts.size());
-                while(accounts.get(account)[2].equalsIgnoreCase("true")){
-                    account = Random.nextInt(0, accounts.size());
+                Time.sleep(Random.nextInt(1000,10000));
+                switch(afterIsland){
+                    case 1:
+                        if(Bank.isOpen()){
+                            Bank.depositInventory();
+                            int rand = Random.nextInt(1,3);
+                            if(rand == 1){
+                                Bank.depositEquipment();
+                            } else if(rand == 2) {
+                                Bank.depositInventory();
+                            } else if(rand == 3){
+                                Bank.depositEquipment();
+                                Bank.depositInventory();
+                            }
+                            replaceSelected(RSPeer.getQuickStartArgs().getRsUsername() + "," + RSPeer.getQuickStartArgs().getRsPassword());
+                            RSPeer.shutdown();
+                        } else {
+                            Bank.open();
+                        }
+                    case 2:
+                        if(Skills.getCurrentLevel(Skill.ATTACK) > 3) {
+                            replaceSelected(RSPeer.getQuickStartArgs().getRsUsername() + "," + RSPeer.getQuickStartArgs().getRsPassword());
+                            RSPeer.shutdown();
+                        } else {
+                            if(Players.getLocal().getPosition().distance(new Position(3253,3245)) < 30){
+                                Npc goblin = Npcs.getNearest("Goblin");
+                                if (goblin.isPositionWalkable() && !Players.getLocal().isHealthBarVisible()) {
+                                    goblin.interact("Attack");
+                                    Time.sleepUntil(Moving, 1500);
+                                    Time.sleepUntil(NotMoving, 600, 5000);
+                                    Time.sleepUntil(() -> goblin == null, 2000, 25000);
+                                }
+                            } else {
+                                Movement.walkToRandomized(new Position (3253, 3245));
+                            }
+                        }
+                    case 3:
+                        if(Players.getLocal().getPosition().distance(new Position(3160,3490)) < 10) {
+                            replaceSelected(RSPeer.getQuickStartArgs().getRsUsername() + "," + RSPeer.getQuickStartArgs().getRsPassword());
+                            RSPeer.shutdown();
+                        } else {
+                            Movement.walkToRandomized(new Position (3160, 3490));
+                        }
+                    case 4:
+                        if(Players.getLocal().getPosition().distance(new Position(3091,3242)) < 8) {
+                            replaceSelected(RSPeer.getQuickStartArgs().getRsUsername() + "," + RSPeer.getQuickStartArgs().getRsPassword());
+                            RSPeer.shutdown();
+                        } else {
+                            Movement.walkToRandomized(new Position (3091, 3242));
+                        }
+                    case 5:
+                        replaceSelected(RSPeer.getQuickStartArgs().getRsUsername() + "," + RSPeer.getQuickStartArgs().getRsPassword());
+                        RSPeer.shutdown();
+                    case 6:
+                        replaceSelected(RSPeer.getQuickStartArgs().getRsUsername() + "," + RSPeer.getQuickStartArgs().getRsPassword());
+                        RSPeer.shutdown();
+                    case 7:
+                        replaceSelected(RSPeer.getQuickStartArgs().getRsUsername() + "," + RSPeer.getQuickStartArgs().getRsPassword());
+                        RSPeer.shutdown();
+                    case 8:
+                        replaceSelected(RSPeer.getQuickStartArgs().getRsUsername() + "," + RSPeer.getQuickStartArgs().getRsPassword());
+                        RSPeer.shutdown();
                 }
-                if(accounts.get(account)[2].equalsIgnoreCase("false")) {
-                    Login.enterCredentials(accounts.get(account)[0], accounts.get(account)[1]);
-                }*/
 
-
+                break;
+            default:
+                Log.severe("Unexpected value: " + config);
+                return 0;
         }
 
         return 0;
     }
 
-    public static void replaceSelected(String replaceWith) {
+    private static void replaceSelected(String replaceWith) {
         try {
-            // input the file content to the StringBuffer "input"
             BufferedReader file = new BufferedReader(new FileReader("/home/zoruda/Coding/Runescape/Zoruda-s-Tutorial-Island/accounts.csv"));
-            StringBuffer inputBuffer = new StringBuffer();
+            StringBuilder inputBuffer = new StringBuilder();
             String line;
 
             while ((line = file.readLine()) != null) {
@@ -564,17 +649,7 @@ public class TutorialIsland extends Script {
             }
             file.close();
             String inputStr = inputBuffer.toString();
-
-            Log.info(inputStr);
-
-            // logic to replace lines in the string (could use regex here to be generic)
             inputStr = inputStr.replace(replaceWith + ",FALSE", replaceWith + ",TRUE");
-            Log.info(replaceWith);
-
-            // display the new file for debugging
-            Log.info("----------------------------------\n" + inputStr);
-
-            // write the new string with the replaced line OVER the same file
             FileOutputStream fileOut = new FileOutputStream("/home/zoruda/Coding/Runescape/Zoruda-s-Tutorial-Island/accounts.csv");
             fileOut.write(inputStr.getBytes());
             fileOut.close();
@@ -593,7 +668,7 @@ public class TutorialIsland extends Script {
 
     private void interact(String name, int id, String action){
         try {
-            if (name != "") {
+            if (!name.equals("")) {
                 if (SceneObjects.getNearest(name).isPositionWalkable()) {
                     SceneObjects.getNearest(name).interact(action);
                     Time.sleepUntil(() -> Players.getLocal().isMoving(), 1500);
@@ -610,7 +685,7 @@ public class TutorialIsland extends Script {
             }
         }
         catch(NullPointerException e){
-            if (name != "") {
+            if (!name.equals("")) {
                 if (Npcs.getNearest(name).isPositionWalkable()) {
                     Npcs.getNearest(name).interact(action);
                     Time.sleepUntil(() -> Players.getLocal().isMoving(), 1500);
@@ -628,30 +703,12 @@ public class TutorialIsland extends Script {
         }
     }
 
-    public static void appendStrToFile(String fileName,
-                                       String str)
-    {
-        try {
-            BufferedWriter out = new BufferedWriter(
-                    new FileWriter(fileName, true));
-            out.write(str);
-            out.close();
-        }
-        catch (IOException e) {
-            System.out.println("exception occurred" + e);
-        }
-    }
-
     private void type(String s){
-        byte[] bytes = s.getBytes();
-        for (byte b : bytes)
+        char[] Char = s.toCharArray();
+        for (char b : Char)
         {
-            int code = b;
-            // keycode only handles [A-Z] (which is ASCII decimal [65-90])
-            if (code > 96 && code < 123) code = code - 32;
-            robot.delay(200);
-            robot.keyPress(code);
-            robot.keyRelease(code);
+            Time.sleep(Random.nextInt(100,400));
+            Keyboard.sendKey(b);
         }
     }
 

@@ -19,7 +19,6 @@ while True:
 		else:
 			break;
 
-
 	if not accounts: ## or equals \n
 		print("Out of accounts")
 		exit()
@@ -32,6 +31,16 @@ while True:
 			settings = json.load(f)
 			settings['Clients'][0]['RsUsername'] = accounts[i].split(",")[0]
 			settings['Clients'][0]['RsPassword'] = accounts[i].split(",")[1]
+			print(accounts[i].split(",")[3])
+			if accounts[i].split(",")[3] == "0":
+				settings['Clients'][0]["UseProxy"] = "false"
+			elif accounts[i].split(",")[3] == "1":
+				settings['Clients'][0]["UseProxy"] = "true"
+				settings['Clients'][0]['ProxyIp'] = "108.187.189.144"
+				settings['Clients'][0]['ProxyPort'] = "8000"
+				settings['Clients'][0]['ProxyUser'] = "6wBZb5"
+				settings['Clients'][0]['ProxyPass'] = "NTsj9a"
+
 			f.seek(0)
 			json.dump(settings, f, indent = 4)
 			f.truncate()

@@ -1,17 +1,24 @@
 {
     "Clients": [
         {
-            "UseProxy": false,
+            "UseProxy": "false",
             "ScriptArgs": "",
-            "RsPassword": "references",
+            "RsPassword": "ambassador7248",
+            "Config": {
+                "EngineTickDelay": 0,
+                "DisableModelRendering": true,
+                "LowCpuMode": true,
+                "DisableSceneRendering": true,
+                "SuperLowCpuMode": true
+            },
             "ScriptName": "Zoruda's Tutorial Island",
-            "ProxyIp": "",
-            "ProxyUser": "",
+            "ProxyIp": "108.187.189.144",
+            "ProxyUser": "6wBZb5",
             "IsRepoScript": false,
             "World": 308,
-            "ProxyPort": 0,
-            "RsUsername": "protectprogrammes4125@gmail.com",
-            "ProxyPass": ""
+            "ProxyPort": "8000",
+            "RsUsername": "ashdatable5882@gmail.com",
+            "ProxyPass": "NTsj9a"
         }
     ],
     "AutoUpdateClient": true
